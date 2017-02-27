@@ -15,7 +15,10 @@ var stream;
 
 //set up the different audio nodes we will use for the app
 var analyser = audioCtx.createAnalyser();
-analyser.minDecibels = -80;
+analyser.minDecibels = -$('#sensitivity').val();
+$('#sensitivity').change(function () {
+    analyser.minDecibels = -$('#sensitivity').val();
+});
 analyser.maxDecibels = -0;
 analyser.smoothingTimeConstant = 0;
 
