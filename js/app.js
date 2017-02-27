@@ -45,16 +45,26 @@ if (navigator.getUserMedia) {
         function (stream) {
             source = audioCtx.createMediaStreamSource(stream);
             source.connect(analyser);
-            $('#stopBtn').hide();
+            $('#startBtn').show();
         },
 
         // Error callback
         function (err) {
-            console.log('The following gUM error occured: ' + err);
+            setTimeout(function () {
+                window.alert('Please refresh and allow audio recording.');
+            }, 0);
+            console.error(err);
+            $('#startBtn').attr('disabled', 'disabled');
+            $('#stopBtn').attr('disabled', 'disabled');
         }
     );
 } else {
-    console.log('getUserMedia not supported on your browser!');
+    setTimeout(function () {
+        window.alert('Your browser doesn\'t support audio recodering, please use newer browser instead. ');
+    }, 0);
+    console.error('getUserMedia not supported on your browser!');
+    $('#startBtn').attr('disabled', 'disabled');
+    $('#stopBtn').attr('disabled', 'disabled');
 }
 
 var player;
