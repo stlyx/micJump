@@ -68,7 +68,9 @@ if (navigator.getUserMedia) {
 }
 
 var player;
+var isCentered = false;
 var enemies = [];
+var grounds = [];
 var score;
 var gameArea = {
     start: function () {
@@ -85,7 +87,7 @@ var dataArray = new Uint8Array(bufferLength);
 function updateGameArea() {
     drawVisual = requestAnimationFrame(updateGameArea);
     for (var e1 in enemies) {
-        if (player.crashWith(enemies[e1])) {
+        if (player.crashWith(enemies[e1]) || player.y > HEIGHT) {
             stopGame();
             return;
         }
@@ -105,14 +107,18 @@ function updateGameArea() {
     } else {
         player.speedX = 0;
     }
-    if (avg > 30 && player.hitBottom()) {
+    if (avg > 30 && player.hitGround()) {
         player.speedY = Math.max(-avg / 7, -7);
         console.log('jump ' + player.speedY);
     }
     player.update();
 
+    for (var g1 in grounds) {
+        grounds[g1].update();
+    }
+
     if (gameArea.frameNo % 300 === 1) {
-        enemy = new component(40, 40, 'red', 1000, HEIGHT - 40);
+        enemy = new component(40, 40, 'red', 1000, HEIGHT - 40, 'enemy');
         enemy.speedX = -1;
         enemies.push(enemy);
     }
@@ -123,6 +129,7 @@ function updateGameArea() {
 }
 
 function component(width, height, color, x, y, type) {
+    this.compType = type;
     this.width = width;
     this.height = height;
     this.speedX = 0;
@@ -132,23 +139,53 @@ function component(width, height, color, x, y, type) {
     this.y = y;
     this.update = function () {
         this.speedY += this.gravity;
-        this.x += this.speedX;
         this.y += this.speedY;
-        this.hitBottom();
+        this.hitGround();
+        if ((!isCentered) &&
+            (this.compType === 'player') &&
+            (this.x >= (WIDTH - this.width) / 2)) {
+            isCentered = !isCentered;
+        }
+        if (isCentered) {
+            if (this.compType !== 'player') {
+                this.x -= player.speedX;
+            }
+        } else {
+            this.x += this.speedX;
+        }
         canvasCtx.fillStyle = color;
         canvasCtx.fillRect(this.x, this.y, this.width, this.height);
     };
-    this.hitBottom = function () {
-        var btmPos = HEIGHT - this.height;
-        if (this.y > btmPos) {
-            this.y = HEIGHT - this.height;
+    this.hitGround = function () {
+        var myleft = this.x;
+        var myright = this.x + (this.width);
+        var mytop = this.y;
+        var mybottom = this.y + (this.height);
+        var ghighest = 0;
+        for (var g in grounds) {
+            var gleft = grounds[g].x;
+            var gright = grounds[g].x + grounds[g].width;
+            var gtop = grounds[g].y;
+            if ((gleft <= myleft && gright >= myleft) ||
+                (gleft <= myright && gright >= myright)) {
+                ghighest = Math.max(ghighest, gtop);
+            }
+            // if ((this.speedX > 0 && mybottom >= gtop && myright >= gleft) ||
+            //     (this.speedX < 0 && mybottom >= gtop && myleft <= gright)) {
+            //     this.speedX = 0;
+            // }
+        }
+
+        if (mybottom > ghighest) {
+            this.y = ghighest - this.height;
             this.speedY = 0;
             return true;
-        } else if (this.y === btmPos) {
+        } else if (mybottom === ghighest) {
             return true;
         } else {
             return false;
         }
+        return false;
     };
     this.crashWith = function (otherobj) {
         var myleft = this.x;
@@ -170,6 +207,30 @@ function component(width, height, color, x, y, type) {
     };
 }
 
+function ground(width, height, x) {
+    this.compType = 'ground';
+    this.width = width;
+    this.height = height + 1;
+    this.speedX = 0;
+    this.speedY = 0;
+    this.gravity = 0;
+    this.x = x;
+    this.y = HEIGHT - height - 1;
+    this.update = function () {
+        this.speedY += this.gravity;
+        this.y += this.speedY;
+        if (isCentered) {
+            if (this.compType !== 'player') {
+                this.x -= player.speedX;
+            }
+        } else {
+            this.x += this.speedX;
+        }
+        canvasCtx.fillStyle = 'black';
+        canvasCtx.fillRect(this.x, this.y, this.width, this.height);
+    };
+}
+
 $('#startBtn').click(startGame);
 
 $('#stopBtn').click(stopGame);
@@ -177,8 +238,9 @@ $('#stopBtn').click(stopGame);
 function startGame() {
     $('#stopBtn').show();
     $('#startBtn').hide();
-    player = new component(60, 100, 'blue', 10, HEIGHT - 100);
+    player = new component(60, 100, 'blue', 10, HEIGHT - 100, 'player');
     enemies = [];
+    grounds = [new ground(500, 0, 0), new ground(200, 100, 500)];
     gameArea.start();
     updateGameArea();
 }
