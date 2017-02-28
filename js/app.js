@@ -91,6 +91,11 @@ function updateGameArea() {
             stopGame();
             return;
         }
+        for (var e3 in enemies) {
+            if (e1 !== e3 && enemies[e1].crashWith(enemies[e3])) {
+                throw "Error occured.";
+            }
+        }
     }
     gameArea.clear();
     gameArea.frameNo++;
@@ -118,7 +123,7 @@ function updateGameArea() {
     }
 
     if (gameArea.frameNo % 300 === 1) {
-        enemy = new component(40, 40, 'red', 1000, 0, 'enemy');
+        var enemy = new component(40, 40, 'red', 1000, 0, 'enemy');
         enemy.speedX = -1;
         enemies.push(enemy);
     }
@@ -148,6 +153,7 @@ function component(width, height, color, x, y, type) {
         }
         if (isCentered) {
             if (this.compType !== 'player') {
+                this.x += this.speedX;
                 this.x -= player.speedX;
             }
         } else {
@@ -235,6 +241,7 @@ $('#stopBtn').click(stopGame);
 function startGame() {
     $('#stopBtn').show();
     $('#startBtn').hide();
+    isCentered = false;
     player = new component(60, 100, 'blue', 10, 0, 'player');
     enemies = [];
     grounds = [new ground(500, 10, 0), new ground(200, 30, 500), new ground(1000, 10, 800)];
