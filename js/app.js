@@ -168,12 +168,12 @@ function component(width, height, color, x, y, type) {
             var gtop = grounds[g].y;
             if ((gleft <= myleft && gright >= myleft) ||
                 (gleft <= myright && gright >= myright)) {
-                ghighest = Math.max(ghighest, gtop);
+                ghighest = Math.min(ghighest, gtop);
             }
-            // if ((this.speedX > 0 && mybottom >= gtop && myright >= gleft) ||
-            //     (this.speedX < 0 && mybottom >= gtop && myleft <= gright)) {
-            //     this.speedX = 0;
-            // }
+            if ((this.speedX > 0 && mybottom > gtop && myright >= gleft) ||
+                (this.speedX < 0 && mybottom > gtop && myleft <= gright)) {
+                this.speedX = 0;
+            }
         }
 
         if (mybottom > ghighest) {
