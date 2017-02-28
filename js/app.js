@@ -118,7 +118,7 @@ function updateGameArea() {
     }
 
     if (gameArea.frameNo % 300 === 1) {
-        enemy = new component(40, 40, 'red', 1000, HEIGHT - 40, 'enemy');
+        enemy = new component(40, 40, 'red', 1000, 0, 'enemy');
         enemy.speedX = -1;
         enemies.push(enemy);
     }
@@ -161,14 +161,20 @@ function component(width, height, color, x, y, type) {
         var myright = this.x + (this.width);
         var mytop = this.y;
         var mybottom = this.y + (this.height);
-        var ghighest = 0;
+        var ghighest = 2 * HEIGHT;
         for (var g in grounds) {
             var gleft = grounds[g].x;
             var gright = grounds[g].x + grounds[g].width;
             var gtop = grounds[g].y;
-            if ((gleft <= myleft && gright >= myleft) ||
-                (gleft <= myright && gright >= myright)) {
+            if ((gleft < myleft && gright > myleft) ||
+                (gleft < myright && gright > myright)) {
                 ghighest = Math.min(ghighest, gtop);
+                if (mybottom > ghighest) {
+                    this.y = ghighest - this.height;
+                    this.speedY = 0;
+                    mytop = this.y;
+                    mybottom = this.y + (this.height);
+                }
             }
             if ((this.speedX > 0 && mybottom > gtop && myright >= gleft) ||
                 (this.speedX < 0 && mybottom > gtop && myleft <= gright)) {
@@ -176,16 +182,7 @@ function component(width, height, color, x, y, type) {
             }
         }
 
-        if (mybottom > ghighest) {
-            this.y = ghighest - this.height;
-            this.speedY = 0;
-            return true;
-        } else if (mybottom === ghighest) {
-            return true;
-        } else {
-            return false;
-        }
-        return false;
+        return mybottom === ghighest;
     };
     this.crashWith = function (otherobj) {
         var myleft = this.x;
@@ -238,9 +235,9 @@ $('#stopBtn').click(stopGame);
 function startGame() {
     $('#stopBtn').show();
     $('#startBtn').hide();
-    player = new component(60, 100, 'blue', 10, HEIGHT - 100, 'player');
+    player = new component(60, 100, 'blue', 10, 0, 'player');
     enemies = [];
-    grounds = [new ground(500, 0, 0), new ground(200, 100, 500)];
+    grounds = [new ground(500, 10, 0), new ground(200, 30, 500), new ground(1000, 10, 800)];
     gameArea.start();
     updateGameArea();
 }
